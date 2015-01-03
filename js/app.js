@@ -5,6 +5,9 @@
 //
 //*
 
+// Global Variables
+var frequencies = [];
+
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 window.URL = window.URL || window.webkitURL;
@@ -21,10 +24,9 @@ if (!navigator.getUserMedia)
 	}, gotStream, noStream);
 }
 
-function gotStream(stream) 
-{
+function gotStream(stream) {
 	if (window.URL) {   
-			camvideo.src = window.URL.createObjectURL(stream);   
+		camvideo.src = window.URL.createObjectURL(stream);   
 	} else { // Opera   
 		camvideo.src = stream;   
 	}
@@ -33,47 +35,53 @@ function gotStream(stream)
 	};
 	stream.onended = noStream;
 
+
+	/* 
+	// Audio Processing
+	// see: ttp://srchea.com/experimenting-with-web-audio-api-three-js-webgl
+	*/
+
     // creates the audio context
-    audioContext = window.AudioContext || window.webkitAudioContext;
-    context = new audioContext();
- 
-    // creates a gain node
-    volume = context.createGain();
- 
+    var audioContext = window.AudioContext || window.webkitAudioContext;
+    var context = new audioContext();
+
     // creates an audio node from the microphone incoming stream
-    audioInput = context.createMediaStreamSource(stream);
- 
-    // connect the stream to the gain node
-    audioInput.connect(volume);
- 
-    /* From the spec: This value controls how frequently the audioprocess event is 
-    dispatched and how many sample-frames need to be processed each call. 
-    Lower values for buffer size will result in a lower (better) latency. 
-    Higher values will be necessary to avoid audio breakup and glitches */
-    var bufferSize = 2048;
+    var audioInput = context.createMediaStreamSource(stream);
 
-    var recorder = context.createScriptProcessor(bufferSize, 2, 2);
- 
-    recorder.onaudioprocess = function(e){
-        console.log ('recording: ', e);
 
-        // var left = e.inputBuffer.getChannelData (0);
-        // var right = e.inputBuffer.getChannelData (1);
-        // // we clone the samples
-        // leftchannel.push (new Float32Array (left));
-        // rightchannel.push (new Float32Array (right));
-        // recordingLength += bufferSize;
-    }
- 
-    // we connect the recorder
-    volume.connect (recorder);
-    recorder.connect (context.destination); 
+    // create a ScriptProcessorNode
+    var node = context.createScriptProcessor(2048, 1, 1);
+
+    var analyser;
+
+    analyser = context.createAnalyser();
+    analyser.smoothingTimeConstant = 0.6;
+    analyser.fftSize = 512;
+
+    node.onaudioprocess = function(e) {
+
+    	try {
+			
+			frequencies = new Uint8Array(analyser.frequencyBinCount);
+            analyser.getByteFrequencyData(frequencies);
+
+		}
+		catch (e){
+			console.log('node.onaudioprocess',e.message);
+		}
+	}
+
+	audioInput.connect(node);
+	audioInput.connect(analyser);
+	node.connect(context.destination);
+
 }
-function noStream(e) 
-{
+
+function noStream(e) {
 	var msg = 'No camera available.';
-	if (e.code == 1) 
-		{   msg = 'User denied access to use camera.';   }
+	if (e.code == 1) {   
+		msg = 'User denied access to use camera.';   
+	}
 	document.getElementById('errorMessage').textContent = msg;
 }
 
@@ -154,9 +162,7 @@ for ( i = 0; i < xgrid; i ++ )
 		scene.add(cube);
 		cubes.push(cube);
 		cube_count++;
-}
-
-
+	}
 
 // Rendering 
 function render() {
@@ -169,11 +175,30 @@ function render() {
 	}
 
 	requestAnimationFrame( render );
-	
+
 	cubes.forEach(function(cube){
 		//cube.rotation.x += 0.002;
 		//cube.rotation.y += 0.002;
+
 	});
+
+	// rotate scene
+	var rotSpeed = .002
+	var x = camera.position.x,
+        y = camera.position.y,
+        z = camera.position.z;
+
+	//camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
+    //camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
+    //camera.lookAt(scene.position);
+
+    // adjust audio visualization
+	var k = 0;
+	for(var i = 0; i < cubes.length; i++) {
+        var scale = frequencies[k] / 30;
+        cubes[i].scale.z = (scale < 1 ? 1 : scale);
+        k += (k < frequencies.length ? 1 : 0); 
+	}
 
 	renderer.render( scene, camera );
 }
@@ -183,22 +208,18 @@ render();
 // Damit auf jedem Würfel nur der entsprechende Bereich des Videos als Textur angewendet wird
 function change_uvs( geometry, unitx, unity, offsetx, offsety ) {
 
-				var faceVertexUvs = geometry.faceVertexUvs[ 0 ];
+	var faceVertexUvs = geometry.faceVertexUvs[ 0 ];
 
-				for ( var i = 0; i < faceVertexUvs.length; i ++ ) {
+	for ( var i = 0; i < faceVertexUvs.length; i ++ ) {
+		var uvs = faceVertexUvs[ i ];
+		for ( var j = 0; j < uvs.length; j ++ ) {
+			var uv = uvs[ j ];
+			uv.x = ( uv.x + offsetx ) * unitx;
+			uv.y = ( uv.y + offsety ) * unity;
 
-					var uvs = faceVertexUvs[ i ];
+		}
 
-					for ( var j = 0; j < uvs.length; j ++ ) {
-
-						var uv = uvs[ j ];
-
-						uv.x = ( uv.x + offsetx ) * unitx;
-						uv.y = ( uv.y + offsety ) * unity;
-
-					}
-
-				}
+	}
 
 }
 
