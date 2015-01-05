@@ -179,26 +179,32 @@ function render() {
 	cubes.forEach(function(cube){
 		//cube.rotation.x += 0.002;
 		//cube.rotation.y += 0.002;
-
 	});
 
-	// rotate scene
-	var rotSpeed = .002
-	var x = camera.position.x,
-        y = camera.position.y,
-        z = camera.position.z;
+	if(isRotate) {
+		// rotate scene
+		var rotSpeed = .005
+		var x = camera.position.x,
+        	z = camera.position.z;
 
-	//camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
-    //camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
-    //camera.lookAt(scene.position);
-
-    // adjust audio visualization
-	var k = 0;
-	for(var i = 0; i < cubes.length; i++) {
-        var scale = frequencies[k] / 30;
-        cubes[i].scale.z = (scale < 1 ? 1 : scale);
-        k += (k < frequencies.length ? 1 : 0); 
+		camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
+    	camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
+    	camera.lookAt(scene.position);	
 	}
+	
+    // adjust audio visualization
+    //var scaling = false;
+    if(isVisualizer && !scaling) {
+    	//scaling = true;
+    	console.log('start');
+    	var k = 0;
+		for(var i = 0; i < cubes.length; i++) {
+        	var scale = frequencies[k] / 30;
+        	cubes[i].scale.z = (scale < 1 ? 1 : scale);
+        	k += (k < frequencies.length ? 1 : 0); 
+		}
+		//scaling = false;
+    }
 
 	renderer.render( scene, camera );
 }
@@ -216,15 +222,47 @@ function change_uvs( geometry, unitx, unity, offsetx, offsety ) {
 			var uv = uvs[ j ];
 			uv.x = ( uv.x + offsetx ) * unitx;
 			uv.y = ( uv.y + offsety ) * unity;
-
 		}
-
 	}
-
 }
 
+var isVisualizer = false;
+var isRotate = false;
 
+$(document).ready(function() {
 
+	$('.js-visualizer').on('click', function() {
+		if(isVisualizer) {
+			isVisualizer = false;	
+			$(this).text('Start Visualizer');
+		} else {
+			isVisualizer = true;	
+			$(this).text('Stop Visualizer');
+		}
+	})
+
+	$('.js-rotate').on('click', function() {
+		if(isRotate) {
+			isRotate = false;	
+			$(this).text('Start Rotation');
+		} else {
+			isRotate = true;	
+			$(this).text('Stop Rotation');
+		}
+	})
+
+	$('.js-reset').on('click', function() {		
+		// Reset Visualizer
+		for(var i = 0; i < cubes.length; i++) {
+        	cubes[i].scale.z = 1;
+		}
+		// Reset Rotation
+		camera.position.x = 0;
+    	camera.position.z = 500;
+    	camera.lookAt(scene.position);	
+	})
+
+})
 
 
 

@@ -1,9 +1,30 @@
 body { 
 	margin: 0; 
+	font-family: Helvetica;
 }
 
 #threeJS {
 	position: absolute;
 	left: 0px; 
 	top: 0px;
+}
+
+.header {
+	margin-left: 515px;
+}
+
+
+
+h1 {
+	position: relative;
+	color: white;
+	font-weight: normal;
+}
+
+.btn {
+	position: relative;
+	background-color: #00ffff;
+	padding: 5px 10px;
+	font-size: 16px;
+	border: none;
 }

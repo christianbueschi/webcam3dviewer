@@ -6,19 +6,27 @@
 	<link rel="stylesheet" type="text/css" href="css/app.css">
 	<script type="text/javascript" src="js/three.min.js"></script>
 
-		<script src="http://threejs.org/examples/js/shaders/ConvolutionShader.js"></script>
-		<script src="http://threejs.org/examples/js/shaders/CopyShader.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
-		<script src="http://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
-		<script src="http://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
-		<script src="http://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
-		<script src="http://threejs.org/examples/js/postprocessing/BloomPass.js"></script>
-		<script src="http://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+	<script src="http://threejs.org/examples/js/shaders/ConvolutionShader.js"></script>
+	<script src="http://threejs.org/examples/js/shaders/CopyShader.js"></script>
+
+	<script src="http://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+	<script src="http://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+	<script src="http://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
+	<script src="http://threejs.org/examples/js/postprocessing/BloomPass.js"></script>
+	<script src="http://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
 
 </head>
 <body>
 
 	<div id="threeJS"></div>
+	<div class="header">
+		<h1>Webcam 3D Visualization</h1>
+		<button class="btn btn-start js-visualizer">Start Audio Input Visualizer</button>
+		<button class="btn btn-rotate js-rotate">Rotate Panel</button>
+		<button class="btn btn-reset js-reset">Reset</button>
+	</div>
 
 	<p id="errorMessage"></p>
 
