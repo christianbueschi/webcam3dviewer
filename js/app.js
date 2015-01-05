@@ -38,7 +38,7 @@ function gotStream(stream) {
 
 	/* 
 	// Audio Processing
-	// see: ttp://srchea.com/experimenting-with-web-audio-api-three-js-webgl
+	// see: http://srchea.com/experimenting-with-web-audio-api-three-js-webgl
 	*/
 
     // creates the audio context
@@ -126,6 +126,19 @@ container = document.getElementById( 'threeJS' );
 container.appendChild( renderer.domElement );
 
 
+// postprocessing shader
+var composer = new THREE.EffectComposer( renderer );
+	composer.addPass( new THREE.RenderPass( scene, camera ) );
+
+var effect = new THREE.ShaderPass( THREE.DotScreenShader );
+	effect.uniforms[ 'scale' ].value = 4;
+	composer.addPass( effect );
+
+var effect = new THREE.ShaderPass( THREE.RGBShiftShader );
+	effect.uniforms[ 'amount' ].value = 0.0015;
+	effect.renderToScreen = true;
+	composer.addPass( effect );	
+
 
 // Creates Figures (Cube)
 var geometry;
@@ -147,7 +160,7 @@ var parameters = { color: 0xffffff, map: videoTexture };
 
 var cube_count = 0;
 
-for ( i = 0; i < xgrid; i ++ )
+for ( i = 0; i < xgrid; i ++ ) {
 	for ( j = 0; j < ygrid; j ++ ) {
 		var ox = i;
 		var oy = j;
@@ -163,6 +176,7 @@ for ( i = 0; i < xgrid; i ++ )
 		cubes.push(cube);
 		cube_count++;
 	}
+}
 
 // Rendering 
 function render() {
@@ -176,11 +190,6 @@ function render() {
 
 	requestAnimationFrame( render );
 
-	cubes.forEach(function(cube){
-		//cube.rotation.x += 0.002;
-		//cube.rotation.y += 0.002;
-	});
-
 	if(isRotate) {
 		// rotate scene
 		var rotSpeed = .005
@@ -193,20 +202,31 @@ function render() {
 	}
 	
     // adjust audio visualization
-    //var scaling = false;
-    if(isVisualizer && !scaling) {
-    	//scaling = true;
-    	console.log('start');
+    if(isVisualizer) {
     	var k = 0;
 		for(var i = 0; i < cubes.length; i++) {
         	var scale = frequencies[k] / 30;
+        	scale = Math.round(scale * 100) / 100;
         	cubes[i].scale.z = (scale < 1 ? 1 : scale);
         	k += (k < frequencies.length ? 1 : 0); 
 		}
-		//scaling = false;
+
+    }
+
+    if(isExplode) {
+    	for(var i = 0; i < cubes.length; i++) {
+        	cubes[i].position.x = cubes[i].position.x + Math.floor(Math.random() * 11) - 5;
+    		cubes[i].position.y = cubes[i].position.y + Math.floor(Math.random() * 11) - 5;
+			cubes[i].rotation.x += 0.002;
+			cubes[i].rotation.y += 0.002;
+		}	
     }
 
 	renderer.render( scene, camera );
+
+	if(isShader) {
+		composer.render();	
+	}
 }
 render();
 
@@ -228,6 +248,8 @@ function change_uvs( geometry, unitx, unity, offsetx, offsety ) {
 
 var isVisualizer = false;
 var isRotate = false;
+var isShader = false;
+var isExplode = false;
 
 $(document).ready(function() {
 
@@ -251,6 +273,24 @@ $(document).ready(function() {
 		}
 	})
 
+	$('.js-shader').on('click', function() {
+		if(isShader) {
+			isShader = false;
+			$(this).text('Activate Shader');
+		} else {
+			isShader = true;
+			$(this).text('Deactivate Shader');
+		}
+	})
+
+	$('.js-explode').on('click', function() {
+		if(isExplode) {
+			isExplode = false; 
+		} else {
+			isExplode = true; 
+		}
+	})
+
 	$('.js-reset').on('click', function() {		
 		// Reset Visualizer
 		for(var i = 0; i < cubes.length; i++) {
@@ -260,11 +300,17 @@ $(document).ready(function() {
 		camera.position.x = 0;
     	camera.position.z = 500;
     	camera.lookAt(scene.position);	
+
+  //   	for ( i = 1; i <= xgrid; i ++ ) {
+		// 	for ( j = 0; j < ygrid; j ++ ) {
+		// 		cubes[j*i].position.x =   ( i - xgrid/2 ) * xsize;
+		// 		cubes[j*i].position.y =   ( j - ygrid/2 ) * ysize;
+		// 	}
+		// }
+
 	})
 
 })
-
-
 
 
 
