@@ -195,14 +195,20 @@ for ( i = 0; i < xgrid; i ++ ) {
 		cube.position.x =   ( i - xgrid/2 ) * xsize;
 		cube.position.y =   ( j - ygrid/2 ) * ysize;
 		cube.position.z = 0;
+		cube.startx = cube.position.x;
+		cube.starty = cube.position.y;
+		cube.dx = 0.001 * ( 0.5 - Math.random() );
+		cube.dy = 0.001 * ( 0.5 - Math.random() );
 		scene.add(cube);
 		cubes.push(cube);
 		cube_count++;
 	}
 }
 
+var counter = 1;
 // Rendering 
 function render() {
+
 
 	if ( video.readyState === video.HAVE_ENOUGH_DATA ) 
 	{
@@ -237,12 +243,18 @@ function render() {
     }
 
     if(isExplode) {
-    	for(var i = 0; i < cubes.length; i++) {
-        	cubes[i].position.x = cubes[i].position.x + Math.floor(Math.random() * 11) - 5;
-    		cubes[i].position.y = cubes[i].position.y + Math.floor(Math.random() * 11) - 5;
-			cubes[i].rotation.x += 0.002;
-			cubes[i].rotation.y += 0.002;
-		}	
+				for ( i = 0; i < cube_count; i ++ ) {
+
+								cube = cubes[ i ];
+
+								cube.rotation.x += 10 * cube.dx;
+								cube.rotation.y += 10 * cube.dy;
+
+								cube.position.x += 200 * cube.dx * (counter/2);
+								cube.position.y += 200 * cube.dy * (counter/2);
+								cube.position.z += 200 * cube.dx * (counter/2);
+				}
+			counter ++;
     }
 
 	renderer.render( scene, camera );
@@ -307,11 +319,13 @@ $(document).ready(function() {
 	})
 
 	$('.js-explode').on('click', function() {
-		if(isExplode) {
-			isExplode = false; 
+		/*if(isExplode) {
+			isExplode = false;
 		} else {
 			isExplode = true; 
-		}
+		}*/
+		isExplode = true;
+		counter = 1;
 	})
 
 	$('.js-reset').on('click', function() {		
@@ -323,6 +337,20 @@ $(document).ready(function() {
 		camera.position.x = 0;
     	camera.position.z = 500;
     	camera.lookAt(scene.position);	
+		
+		// Reset Cubes
+		isExplode = false;
+		for ( i = 0; i < cube_count; i ++ ) {
+
+			cube = cubes[ i ];
+
+			cube.rotation.x = 0;
+			cube.rotation.y = 0;
+			cube.position.x = cube.startx;
+			cube.position.y = cube.starty;
+			cube.position.z = 0;
+		}
+		
 
   //   	for ( i = 1; i <= xgrid; i ++ ) {
 		// 	for ( j = 0; j < ygrid; j ++ ) {
