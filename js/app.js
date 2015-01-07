@@ -125,6 +125,29 @@ renderer.setSize( window.innerWidth, window.innerHeight );
 container = document.getElementById( 'threeJS' );
 container.appendChild( renderer.domElement );
 
+//init control panel
+	var params = new WCMParams();
+	var gui = new dat.GUI();
+	gui.add(params, 'saturation', 0, 1).name('Saturation').onChange(onParamsChange);
+	gui.add(params, 'hue', 0, 2).name('Hue').onChange(onParamsChange);
+	gui.close();
+
+function WCMParams() {
+	this.saturation = 0;
+	this.hue = 2;
+}
+
+function onParamsChange() {
+	for ( i = 0; i < cube_count; i++ ) {
+		material = materials[ i ];
+		material.saturation = params.saturation;
+		material.hue = params.hue;
+
+		material.color.setHSL( material.hue, material.saturation, 0.7 );
+
+	}
+}
+
 
 // postprocessing shader
 var composer = new THREE.EffectComposer( renderer );
