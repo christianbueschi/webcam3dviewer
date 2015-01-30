@@ -6,7 +6,7 @@
 //*
 
 // Global Variables
-var frequencies = [];
+var frequencies = new Array();
 
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
@@ -61,19 +61,19 @@ function gotStream(stream) {
     node.onaudioprocess = function(e) {
 
     	try {
-			
-			frequencies = new Uint8Array(analyser.frequencyBinCount);
-            analyser.getByteFrequencyData(frequencies);
 
-		}
-		catch (e){
-			console.log('node.onaudioprocess',e.message);
-		}
-	}
+    		frequencies = new Uint8Array(analyser.frequencyBinCount);
+    		analyser.getByteFrequencyData(frequencies);
 
-	audioInput.connect(node);
-	audioInput.connect(analyser);
-	node.connect(context.destination);
+    	}
+    	catch (e){
+    		console.log('node.onaudioprocess',e.message);
+    	}
+    }
+
+    audioInput.connect(node);
+    audioInput.connect(analyser);
+    node.connect(context.destination);
 
 }
 
@@ -126,11 +126,11 @@ container = document.getElementById( 'threeJS' );
 container.appendChild( renderer.domElement );
 
 //init control panel
-	var params = new WCMParams();
-	var gui = new dat.GUI();
-	gui.add(params, 'saturation', 0, 1).name('Saturation').onChange(onParamsChange);
-	gui.add(params, 'hue', 0, 2).name('Hue').onChange(onParamsChange);
-	gui.close();
+var params = new WCMParams();
+var gui = new dat.GUI();
+gui.add(params, 'saturation', 0, 1).name('Saturation').onChange(onParamsChange);
+gui.add(params, 'hue', 0, 2).name('Hue').onChange(onParamsChange);
+gui.close();
 
 function WCMParams() {
 	this.saturation = 0;
@@ -151,16 +151,16 @@ function onParamsChange() {
 
 // postprocessing shader
 var composer = new THREE.EffectComposer( renderer );
-	composer.addPass( new THREE.RenderPass( scene, camera ) );
+composer.addPass( new THREE.RenderPass( scene, camera ) );
 
 var effect = new THREE.ShaderPass( THREE.DotScreenShader );
-	effect.uniforms[ 'scale' ].value = 4;
-	composer.addPass( effect );
+effect.uniforms[ 'scale' ].value = 4;
+composer.addPass( effect );
 
 var effect = new THREE.ShaderPass( THREE.RGBShiftShader );
-	effect.uniforms[ 'amount' ].value = 0.0015;
-	effect.renderToScreen = true;
-	composer.addPass( effect );	
+effect.uniforms[ 'amount' ].value = 0.0015;
+effect.renderToScreen = true;
+composer.addPass( effect );	
 
 
 // Creates Figures (Cube)
@@ -217,51 +217,52 @@ function render() {
 			videoTexture.needsUpdate = true;
 	}
 
-	requestAnimationFrame( render );
-
 	if(isRotate) {
 		// rotate scene
 		var rotSpeed = .005
 		var x = camera.position.x,
-        	z = camera.position.z;
+		z = camera.position.z;
 
 		camera.position.x = x * Math.cos(rotSpeed) + z * Math.sin(rotSpeed);
-    	camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
-    	camera.lookAt(scene.position);	
+		camera.position.z = z * Math.cos(rotSpeed) - x * Math.sin(rotSpeed);
+		camera.lookAt(scene.position);	
 	}
 	
     // adjust audio visualization
     if(isVisualizer) {
     	var k = 0;
-		for(var i = 0; i < cubes.length; i++) {
-        	var scale = frequencies[k] / 30;
-        	scale = Math.round(scale * 100) / 100;
-        	cubes[i].scale.z = (scale < 1 ? 1 : scale);
-        	k += (k < frequencies.length ? 1 : 0); 
-		}
-
+    	
+    	if(typeof frequencies === 'object' && frequencies.length > 0 ) {
+    		for(var i = 0; i < cubes.length; i++) {
+    			var scale = frequencies[k] / 30;
+    			scale = Math.round(scale * 10) / 10;
+    			cubes[i].scale.z = (scale < 1 ? 1 : scale);
+    			k += (k < frequencies.length ? 1 : 0); 
+    		}
+    	}
     }
 
     if(isExplode) {
-				for ( i = 0; i < cube_count; i ++ ) {
+    	for ( i = 0; i < cube_count; i ++ ) {
 
-								cube = cubes[ i ];
+    		cube = cubes[ i ];
 
-								cube.rotation.x += 10 * cube.dx;
-								cube.rotation.y += 10 * cube.dy;
+    		cube.rotation.x += 10 * cube.dx;
+    		cube.rotation.y += 10 * cube.dy;
 
-								cube.position.x += 200 * cube.dx * (counter/2);
-								cube.position.y += 200 * cube.dy * (counter/2);
-								cube.position.z += 200 * cube.dx * (counter/2);
-				}
-			counter ++;
+    		cube.position.x += 200 * cube.dx * (counter/2);
+    		cube.position.y += 200 * cube.dy * (counter/2);
+    		cube.position.z += 200 * cube.dx * (counter/2);
+    	}
+    	counter ++;
     }
 
-	renderer.render( scene, camera );
+    requestAnimationFrame( render );
+    renderer.render( scene, camera );
 
-	if(isShader) {
-		composer.render();	
-	}
+    if(isShader) {
+    	composer.render();	
+    }
 }
 render();
 
@@ -331,12 +332,12 @@ $(document).ready(function() {
 	$('.js-reset').on('click', function() {		
 		// Reset Visualizer
 		for(var i = 0; i < cubes.length; i++) {
-        	cubes[i].scale.z = 1;
+			cubes[i].scale.z = 1;
 		}
 		// Reset Rotation
 		camera.position.x = 0;
-    	camera.position.z = 500;
-    	camera.lookAt(scene.position);	
+		camera.position.z = 500;
+		camera.lookAt(scene.position);	
 		
 		// Reset Cubes
 		isExplode = false;
@@ -350,15 +351,6 @@ $(document).ready(function() {
 			cube.position.y = cube.starty;
 			cube.position.z = 0;
 		}
-		
-
-  //   	for ( i = 1; i <= xgrid; i ++ ) {
-		// 	for ( j = 0; j < ygrid; j ++ ) {
-		// 		cubes[j*i].position.x =   ( i - xgrid/2 ) * xsize;
-		// 		cubes[j*i].position.y =   ( j - ygrid/2 ) * ysize;
-		// 	}
-		// }
-
 	})
 
 })
